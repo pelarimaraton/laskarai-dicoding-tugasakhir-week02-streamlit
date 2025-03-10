@@ -11,75 +11,55 @@ hour_df = pd.read_csv(url_hour)
 # Judul Aplikasi
 st.title("Analisis Penyewaan Sepeda")
 
+# Fungsi untuk membuat grafik Altair
+def create_altair_chart(data, x_col, y_col, title, x_title, y_title):
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X(x_col, title=x_title),
+        y=alt.Y(y_col, title=y_title),
+        tooltip=[x_col, y_col]
+    ).properties(
+        title=title
+    ).interactive()
+    return chart
+
 # Analisis Hari Kerja (Weekday)
 st.header("Analisis Penyewaan Sepeda Berdasarkan Hari Kerja")
 
 # Group data by weekday
-day_weekday_grouped = day_df.groupby('weekday')[['cnt', 'casual', 'registered']].mean()
-hour_weekday_grouped = hour_df.groupby('weekday')[['cnt', 'casual', 'registered']].mean()
-merged_weekday_data = pd.merge(day_weekday_grouped, hour_weekday_grouped, left_index=True, right_index=True, suffixes=('_day', '_hour'))
+day_weekday_grouped = day_df.groupby('weekday')[['cnt', 'casual', 'registered']].mean().reset_index()
+hour_weekday_grouped = hour_df.groupby('weekday')[['cnt', 'casual', 'registered']].mean().reset_index()
 
-# Tampilkan data yang dikelompokkan
-st.subheader("Data Agregat per Hari Kerja")
-st.write("Data harian:")
-st.write(day_weekday_grouped)
-st.write("Data per jam:")
-st.write(hour_weekday_grouped)
-st.write("Data gabungan:")
-st.write(merged_weekday_data)
+# Konversi weekday ke nama hari
+days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+day_weekday_grouped['weekday'] = day_weekday_grouped['weekday'].map(lambda x: days[x])
+hour_weekday_grouped['weekday'] = hour_weekday_grouped['weekday'].map(lambda x: days[x])
 
-# Visualisasi data
+# Visualisasi data dengan Altair
 st.subheader("Visualisasi Rata-rata Penyewa Sepeda per Hari Kerja")
-fig, ax = plt.subplots(figsize=(12, 6))
-day_weekday_grouped.plot(kind='bar', ax=ax)
-plt.title('Rata-rata Penyewa Sepeda per Hari (day_df)')
-plt.xlabel('Hari dalam Seminggu')
-plt.ylabel('Rata-rata Jumlah Penyewa')
-plt.xticks(range(7), ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], rotation=45)
-st.pyplot(fig)
+day_chart = create_altair_chart(day_weekday_grouped, 'weekday', 'cnt', 'Rata-rata Penyewa Sepeda per Hari (day_df)', 'Hari dalam Seminggu', 'Rata-rata Jumlah Penyewa')
+st.altair_chart(day_chart, use_container_width=True)
 
 st.subheader("Visualisasi Rata-rata Penyewa Sepeda per Jam Kerja")
-fig, ax = plt.subplots(figsize=(12, 6))
-hour_weekday_grouped.plot(kind='bar', ax=ax)
-plt.title('Rata-rata Penyewa Sepeda per Jam (hour_df)')
-plt.xlabel('Hari dalam Seminggu')
-plt.ylabel('Rata-rata Jumlah Penyewa')
-plt.xticks(range(7), ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'], rotation=45)
-st.pyplot(fig)
-
+hour_chart = create_altair_chart(hour_weekday_grouped, 'weekday', 'cnt', 'Rata-rata Penyewa Sepeda per Jam (hour_df)', 'Hari dalam Seminggu', 'Rata-rata Jumlah Penyewa')
+st.altair_chart(hour_chart, use_container_width=True)
 
 # Analisis Kondisi Cuaca (Weathersit)
 st.header("Analisis Penyewaan Sepeda Berdasarkan Kondisi Cuaca")
 
 # Group data by weathersit
-day_weathersit_grouped = day_df.groupby('weathersit')[['cnt', 'casual', 'registered']].mean()
-hour_weathersit_grouped = hour_df.groupby('weathersit')[['cnt', 'casual', 'registered']].mean()
-merged_weathersit_data = pd.merge(day_weathersit_grouped, hour_weathersit_grouped, left_index=True, right_index=True, suffixes=('_day', '_hour'))
+day_weathersit_grouped = day_df.groupby('weathersit')[['cnt', 'casual', 'registered']].mean().reset_index()
+hour_weathersit_grouped = hour_df.groupby('weathersit')[['cnt', 'casual', 'registered']].mean().reset_index()
 
-# Tampilkan data yang dikelompokkan
-st.subheader("Data Agregat per Kondisi Cuaca")
-st.write("Data harian:")
-st.write(day_weathersit_grouped)
-st.write("Data per jam:")
-st.write(hour_weathersit_grouped)
-st.write("Data gabungan:")
-st.write(merged_weathersit_data)
+# Konversi weathersit ke nama kondisi cuaca
+weathers = ['Cerah', 'Kabut', 'Hujan Ringan', 'Hujan Lebat']
+day_weathersit_grouped['weathersit'] = day_weathersit_grouped['weathersit'].map(lambda x: weathers[x-1])
+hour_weathersit_grouped['weathersit'] = hour_weathersit_grouped['weathersit'].map(lambda x: weathers[x-1])
 
-# Visualisasi data
+# Visualisasi data dengan Altair
 st.subheader("Visualisasi Rata-rata Penyewa Sepeda per Kondisi Cuaca (day_df)")
-fig, ax = plt.subplots(figsize=(10, 6))
-day_weathersit_grouped.plot(kind='bar', ax=ax)
-plt.title('Rata-rata Penyewa Sepeda per Kondisi Cuaca (day_df)')
-plt.xlabel('Kondisi Cuaca')
-plt.ylabel('Rata-rata Jumlah Penyewa')
-plt.xticks(range(4), ['Cerah', 'Kabut', 'Hujan Ringan', 'Hujan Lebat'], rotation=0)
-st.pyplot(fig)
+day_weather_chart = create_altair_chart(day_weathersit_grouped, 'weathersit', 'cnt', 'Rata-rata Penyewa Sepeda per Kondisi Cuaca (day_df)', 'Kondisi Cuaca', 'Rata-rata Jumlah Penyewa')
+st.altair_chart(day_weather_chart, use_container_width=True)
 
 st.subheader("Visualisasi Rata-rata Penyewa Sepeda per Kondisi Cuaca (hour_df)")
-fig, ax = plt.subplots(figsize=(10, 6))
-hour_weathersit_grouped.plot(kind='bar', ax=ax)
-plt.title('Rata-rata Penyewa Sepeda per Kondisi Cuaca (hour_df)')
-plt.xlabel('Kondisi Cuaca')
-plt.ylabel('Rata-rata Jumlah Penyewa')
-plt.xticks(range(4), ['Cerah', 'Kabut', 'Hujan Ringan', 'Hujan Lebat'], rotation=0)
-st.pyplot(fig)
+hour_weather_chart = create_altair_chart(hour_weathersit_grouped, 'weathersit', 'cnt', 'Rata-rata Penyewa Sepeda per Kondisi Cuaca (hour_df)', 'Kondisi Cuaca', 'Rata-rata Jumlah Penyewa')
+st.altair_chart(hour_weather_chart, use_container_width=True)
