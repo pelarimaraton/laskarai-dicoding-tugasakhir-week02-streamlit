@@ -1,6 +1,6 @@
-import streamlit as st
+import altair as alt
 import pandas as pd
-import seaborn as sns
+import streamlit as st
 
 # Load data
 url_day = 'https://raw.githubusercontent.com/pelarimaraton/laskarai-dicoding-tugasakhir-week02/main/Bike-sharing-dataset/day.csv'
